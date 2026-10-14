@@ -1,0 +1,116 @@
+# Inert local review template. Publish ONLY the parentless reviewed code projection.
+# No third-party action dependency; one bounded anonymous archive GET per checkout.
+name: P4 synthetic Hosted probe
+'on':
+  workflow_dispatch:
+    inputs:
+      section:
+        type: choice
+        options: [success, race-crash, refusal]
+        required: true
+      reviewed_code_sha:
+        type: string
+        required: true
+      reviewed_commit_b64:
+        description: Exact public parentless commit object from the reviewed package
+        type: string
+        required: true
+      approved_at_ms:
+        description: Timestamp of the later explicit human start approval (20 hour window)
+        type: string
+        required: true
+      prior_crash_run_id:
+        description: Only for refusal; exact positive run ID from race-crash result
+        type: string
+        required: false
+permissions:
+  contents: read
+concurrency:
+  group: p4-actions-probe-20261014
+  cancel-in-progress: false
+jobs:
+  probe:
+    if: github.repository == 'szoceikaiser/btc-p3-store-probe' && github.repository_id == '1414013858' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      PROBE_CODE_SHA: ${{ inputs.reviewed_code_sha }}
+      PROBE_COMMIT_B64: ${{ inputs.reviewed_commit_b64 }}
+      PROBE_APPROVED_AT_MS: ${{ inputs.approved_at_ms }}
+      PROBE_SECTION: ${{ inputs.section }}
+      PROBE_PRIOR_RUN: ${{ inputs.prior_crash_run_id }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Check actual dispatch binding before checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$PROBE_CODE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$PROBE_CODE_SHA" == "$GITHUB_SHA" ]]
+          [[ "$GITHUB_REF" == refs/heads/p4-actions-code-20261014 ]]
+          [[ "$GITHUB_WORKFLOW_REF" == szoceikaiser/btc-p3-store-probe/.github/workflows/p4-actions-probe.yml@refs/heads/p4-actions-code-20261014 ]]
+          [[ "$GITHUB_RUN_ATTEMPT" == 1 ]]
+          python3 - <<'PY'
+          import os,time,sys
+          assert sys.version_info[:2] == (3,12)
+          assert 0 <= int(time.time()*1000)-int(os.environ['PROBE_APPROVED_AT_MS']) < 72000000
+          print('Python',sys.version.split()[0])
+          PY
+      - name: Checkout exact reviewed public test code commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/python3.12 - <<'PY'
+          import base64,gzip,hashlib,io,os,re,subprocess,tarfile,time,urllib.request
+          from pathlib import Path,PurePosixPath
+          sha=os.environ['PROBE_CODE_SHA']
+          assert re.fullmatch('[0-9a-f]{40}',sha) and sha==os.environ['GITHUB_SHA']
+          raw=base64.b64decode(os.environ['PROBE_COMMIT_B64'],validate=True)
+          assert len(raw)<8192 and hashlib.sha1(b'commit '+str(len(raw)).encode()+b'\0'+raw).hexdigest()==sha
+          headers=raw.split(b'\n\n',1)[0].splitlines()
+          assert headers[0].startswith(b'tree ') and not any(h.startswith(b'parent ') for h in headers)
+          tree=headers[0][5:].decode()
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args): raise RuntimeError('Checkout redirect refused')
+          opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
+          url='https://codeload.github.com/szoceikaiser/btc-p3-store-probe/tar.gz/'+sha
+          deadline=time.monotonic()+60
+          with opener.open(urllib.request.Request(url,headers={'User-Agent':'btc-p4-probe-checkout'}),timeout=15) as response:
+              packed=response.read(1048576+1)
+          assert len(packed)<=1048576 and time.monotonic()<deadline
+          with gzip.GzipFile(fileobj=io.BytesIO(packed)) as compressed: archive=compressed.read(2097152+1)
+          assert len(archive)<=2097152
+          root=Path.cwd().resolve();count=total=0
+          with tarfile.open(fileobj=io.BytesIO(archive),mode='r:') as tar:
+              for member in tar:
+                  count+=1;assert count<=64
+                  parts=PurePosixPath(member.name).parts
+                  assert parts and not PurePosixPath(member.name).is_absolute()
+                  assert all(p not in ('.','..','.git') and '\\' not in p for p in parts)
+                  if len(parts)==1: assert member.isdir();continue
+                  target=root.joinpath(*parts[1:]);assert target.resolve().is_relative_to(root)
+                  assert member.isdir() or member.isfile()
+                  if member.isdir(): target.mkdir(parents=True,exist_ok=True);continue
+                  total+=member.size;assert member.size<=524288 and total<=1048576
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  with target.open('xb') as out: out.write(tar.extractfile(member).read())
+          def git(*args,input=None):
+              return subprocess.check_output(['git','-c','core.autocrlf=false','-c','core.hooksPath=/dev/null',*args],input=input)
+          git('init','.');git('add','.')
+          assert git('write-tree').strip().decode()==tree
+          assert git('hash-object','-t','commit','-w','--stdin',input=raw).strip().decode()==sha
+          git('update-ref','refs/heads/probe-reviewed',sha)
+          git('-c','advice.detachedHead=false','checkout','--detach',sha)
+          assert git('rev-parse','HEAD').strip().decode()==sha
+          assert not git('status','--porcelain')
+          print('P4_CHECKOUT: GET=1; PUT=0; compressed_bytes='+str(len(packed))+'; commit='+sha+'; tree='+tree)
+          PY
+      - name: Execute one bounded section through actual Hosted entry
+        env:
+          PROBE_GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/python3.12 -B tools/actions_probe.py --section "$PROBE_SECTION" --code-sha "$PROBE_CODE_SHA" --out "$RUNNER_TEMP/p4-actions-probe-$GITHUB_RUN_ID" --prior-run "$PROBE_PRIOR_RUN"

@@ -1,0 +1,103 @@
+{
+  "version": 2,
+  "engine": {
+    "direction": "LONG",
+    "retrace_extreme": 100,
+    "last_signal_ts": 1791921600000,
+    "tp_rungs": 0,
+    "dip_buys": 0,
+    "buy_rungs": 0,
+    "entry_ref": 100,
+    "inventory_source": "signal_reference",
+    "lots": [],
+    "cost_basis_complete": true,
+    "migration_notes": [
+      "entirely invented synthetic test position; no real account"
+    ],
+    "valid_stop": null,
+    "valid_stop_reason": "",
+    "entry_pct": 25,
+    "liq_exits": 0,
+    "high_exits": 0,
+    "liq_entries": 0,
+    "ziel_extrem": null,
+    "be_aktiv": false,
+    "widerstand_exits": 0,
+    "stop_wartet": 0,
+    "stop_wartet_inv": null,
+    "stop_geprueft": null,
+    "last_stop_ts": -1,
+    "e42_marke": null,
+    "e42_richtung": "NONE",
+    "e42_start_ts": -1,
+    "e42_ausbruch_ts": -1,
+    "e42_gekauft": null,
+    "e42_teil_marke": null,
+    "e42_teil_wartet": 0,
+    "e42_teil_wartet_inv": null,
+    "e42_teil_geprueft": null,
+    "bestand_pct": 25,
+    "state_version": 2,
+    "pos_state": "T1",
+    "zones": {
+      "impuls_start": 80,
+      "impuls_start_ts": 1791907200000,
+      "impuls_start_kind": "L",
+      "impuls_start_idx": 0,
+      "impuls_ende": 120,
+      "impuls_ende_ts": 1791921600000,
+      "impuls_ende_kind": "H",
+      "impuls_ende_idx": 1,
+      "level_05": 100.0,
+      "gp_upper": 95.28,
+      "gp_lower": 94.0,
+      "level_0786": 88.56,
+      "invalidation": 80,
+      "ext1": 140.0,
+      "ext2": 164.72
+    },
+    "config": {
+      "muster_cvd": "usd",
+      "bias_long": true,
+      "bias_short": false,
+      "ausbruch_ruecktest": false,
+      "plan_telegram": true,
+      "vorschau_telegram": false
+    },
+    "_delivery": {
+      "version": 1,
+      "messages": [],
+      "signals": {
+        "signals": []
+      },
+      "oi_history": []
+    }
+  },
+  "watch": {},
+  "commands": {},
+  "control": {
+    "stream_id": "p4-actions-synthetic-20261014",
+    "store_id": "offline-bound-later",
+    "target_binding": "c5907a5d2d705fceb7ab80083cfb76aa0139de941950de4810cfa5cab2ad387f",
+    "bot_identity": "p4-local-dummy-bot",
+    "mode": "blocked",
+    "owner": null,
+    "code_sha": "offline-bound-later",
+    "config_sha256": "5122a6e1c95d73c847ce2607986948af93a5d5371223b9f079c14e0cc6bcca28",
+    "migration": {
+      "legacy_delivery": "unknown_no_replay",
+      "migration_id": "p4-synthetic-new-stream",
+      "B": 1791921600000,
+      "W": 1791936000000,
+      "history_sha256": "78abe5a2b4cc98cca7c4411e8caaee2a772a2e4301725f82af9b37f21a4e1a09",
+      "history_count": 0,
+      "source_hashes": {},
+      "unknowns": [],
+      "gates": {
+        "synthetic": true
+      }
+    },
+    "health": {},
+    "reconciliations": []
+  }
+}

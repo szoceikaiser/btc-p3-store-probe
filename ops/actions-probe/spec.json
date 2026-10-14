@@ -1,0 +1,71 @@
+{
+  "schema": "p4-actions-synthetic-probe-plan-v1",
+  "repository": "szoceikaiser/btc-p3-store-probe",
+  "repository_id": 1414013858,
+  "code_branch": "p4-actions-code-20261014",
+  "pairs": {
+    "success": {
+      "stream_branch": "p4-actions-success-stream-20261014",
+      "fence_branch": "p4-actions-success-fence-20261014",
+      "store_id": "p4-synthetic-success-20261014"
+    },
+    "loss": {
+      "stream_branch": "p4-actions-loss-stream-20261014",
+      "fence_branch": "p4-actions-loss-fence-20261014",
+      "store_id": "p4-synthetic-loss-20261014"
+    }
+  },
+  "runtime_budgets": {
+    "success": {
+      "policy": "github-confirmation-v1",
+      "confirmation_cycles": 3,
+      "timeout_seconds": 15,
+      "run_get_limit": 122,
+      "run_put_limit": 10,
+      "case_get_limit": 11,
+      "case_put_limit": 1,
+      "request_byte_limit": 16384,
+      "response_byte_limit": 65536,
+      "run_request_byte_limit": 131072,
+      "run_response_byte_limit": 8650752
+    },
+    "loss": {
+      "policy": "github-confirmation-v1",
+      "confirmation_cycles": 3,
+      "timeout_seconds": 15,
+      "run_get_limit": 61,
+      "run_put_limit": 5,
+      "case_get_limit": 11,
+      "case_put_limit": 1,
+      "request_byte_limit": 16384,
+      "response_byte_limit": 65536,
+      "run_request_byte_limit": 65536,
+      "run_response_byte_limit": 4325376
+    }
+  },
+  "section_caps": {
+    "success": {
+      "get": 138,
+      "put": 10,
+      "request_bytes": 131072
+    },
+    "race-crash": {
+      "get": 80,
+      "put": 6,
+      "request_bytes": 65536
+    },
+    "refusal": {
+      "get": 19,
+      "put": 0,
+      "request_bytes": 1
+    }
+  },
+  "human_approval_available_hours": 20,
+  "runtime_deadline_seconds": 900,
+  "no_issued_grants": true,
+  "dispatch_count": 3,
+  "attempts_per_run": 1,
+  "automatic_recovery": false,
+  "automatic_resend": false,
+  "production_ready": false
+}

@@ -1,0 +1,8 @@
+{
+  "muster_cvd": "usd",
+  "bias_long": true,
+  "bias_short": false,
+  "ausbruch_ruecktest": false,
+  "plan_telegram": true,
+  "vorschau_telegram": false
+}
